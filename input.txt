@@ -1,0 +1,13 @@
+int main() {
+    // variaveis
+    "ola"
+    'o'
+    int x = 10;
+    int y = 3;
+    float media = 0.0;
+
+    /* calcula soma */
+    int resultado = soma(x, y);
+
+    return 0;
+}
