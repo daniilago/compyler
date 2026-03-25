@@ -6,15 +6,15 @@ static const char *RESERVED[] = {
     NULL
 };
 
-static int str_eq(const char *a, const char *b) {
-    while (*a && *b) { if (*a != *b) return 0; a++; b++; }
-    return *a == *b;
-}
+// static int str_eq(const char *a, const char *b) {
+//     while (*a && *b) { if (*a != *b) return 0; a++; b++; }
+//     return *a == *b;
+// }
 
 static int is_reserved(const char *word) {
     int i;
     for (i = 0; RESERVED[i] != NULL; i++)
-        if (str_eq(word, RESERVED[i])) return 1;
+        if (strcmp(word, RESERVED[i]) == 0) return 1;
     return 0;
 }
 
@@ -46,11 +46,11 @@ static void skip_whitespace(Lexer *l) {
     }
 }
 
-static void str_ncopy(char *dst, const char *src, int n) {
-    int i;
-    for (i = 0; i < n; i++) dst[i] = src[i];
-    dst[n] = '\0';
-}
+// static void str_ncopy(char *dst, const char *src, int n) {
+//     int i;
+//     for (i = 0; i < n; i++) dst[i] = src[i];
+//     dst[n] = '\0';
+// }
 
 static const char *token_type_str(TokenType t) {
     switch (t) {
@@ -118,10 +118,11 @@ Token next_token(Lexer *l) {
         int start = l->pos;
         while (is_digit(peek(l))) advance(l);
         if (peek(l) == '.' && is_digit(peek2(l))) {
-            advance(l); /* consome o ponto */
+            advance(l); 
             while (is_digit(peek(l))) advance(l);
         }
-        str_ncopy(tok.value, l->src + start, l->pos - start);
+        strncpy(tok.value, l->src + start, l->pos - start);
+        tok.value[l->pos - start] = '\0';
         tok.type = TOKEN_NUMBER;
         return tok;
     }
@@ -130,7 +131,8 @@ Token next_token(Lexer *l) {
     if (is_alpha(c)) {
         int start = l->pos;
         while (is_alnum(peek(l))) advance(l);
-        str_ncopy(tok.value, l->src + start, l->pos - start);
+        strncpy(tok.value, l->src + start, l->pos - start);
+        tok.value[l->pos - start] = '\0';
         tok.type = is_reserved(tok.value) ? TOKEN_RESERVED_WORD : TOKEN_IDENT;
         return tok;
     }
@@ -168,12 +170,12 @@ Token next_token(Lexer *l) {
     // Operators with two caracteres: ==, !=, <=, >=, &&, ||
     char next = peek(l);
 
-    if (c == '=' && next == '=') { advance(l); str_ncopy(tok.value, "==", 2); tok.type = TOKEN_LOGIC_OP; return tok; }
-    if (c == '!' && next == '=') { advance(l); str_ncopy(tok.value, "!=", 2); tok.type = TOKEN_LOGIC_OP; return tok; }
-    if (c == '<' && next == '=') { advance(l); str_ncopy(tok.value, "<=", 2); tok.type = TOKEN_LOGIC_OP; return tok; }
-    if (c == '>' && next == '=') { advance(l); str_ncopy(tok.value, ">=", 2); tok.type = TOKEN_LOGIC_OP; return tok; }
-    if (c == '&' && next == '&') { advance(l); str_ncopy(tok.value, "&&", 2); tok.type = TOKEN_LOGIC_OP; return tok; }
-    if (c == '|' && next == '|') { advance(l); str_ncopy(tok.value, "||", 2); tok.type = TOKEN_LOGIC_OP; return tok; }
+    if (c == '=' && next == '=') { advance(l); strncpy(tok.value, "==", 2); tok.value[2] = '\0'; tok.type = TOKEN_LOGIC_OP; return tok; }
+    if (c == '!' && next == '=') { advance(l); strncpy(tok.value, "!=", 2); tok.value[2] = '\0'; tok.type = TOKEN_LOGIC_OP; return tok; }
+    if (c == '<' && next == '=') { advance(l); strncpy(tok.value, "<=", 2); tok.value[2] = '\0'; tok.type = TOKEN_LOGIC_OP; return tok; }
+    if (c == '>' && next == '=') { advance(l); strncpy(tok.value, ">=", 2); tok.value[2] = '\0'; tok.type = TOKEN_LOGIC_OP; return tok; }
+    if (c == '&' && next == '&') { advance(l); strncpy(tok.value, "&&", 2); tok.value[2] = '\0'; tok.type = TOKEN_LOGIC_OP; return tok; }
+    if (c == '|' && next == '|') { advance(l); strncpy(tok.value, "||", 2); tok.value[2] = '\0'; tok.type = TOKEN_LOGIC_OP; return tok; }
 
     // Logic operator (one caractere)
     if (c == '<' || c == '>' || c == '!') {
