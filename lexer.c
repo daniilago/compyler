@@ -64,6 +64,7 @@ static const char *token_type_str(TokenType t) {
         case TOKEN_LITERAL_STR:   return "LITERAL_STR";   
         case TOKEN_LITERAL_CHAR:  return "LITERAL_CHAR";  
         case TOKEN_EOF:           return "EOF";
+        case TOKEN_ERROR:         return "ERROR";
         default:                  return "UNKNOWN";
     }
 }
@@ -104,10 +105,14 @@ Token next_token(Lexer *l) {
         while (!(peek(l) == '*' && peek2(l) == '/') && peek(l) != '\0') {
             tok.value[i++] = advance(l);
         }
-        if (peek(l) != '\0') { 
-            tok.value[i++] = advance(l);
-            tok.value[i++] = advance(l);
-        } 
+        // SE CHEGOU NO \0 SEM ACHAR O */, É ERRO!
+        if (peek(l) == '\0') {
+            tok.type = TOKEN_ERROR;
+            strcpy(tok.value, "Erro: Comentario de bloco nao fechado");
+            return tok;
+        }
+        tok.value[i++] = advance(l); // consome '*'
+        tok.value[i++] = advance(l); // consome '/'
         tok.value[i] = '\0';
         tok.type = TOKEN_COMMENT;
         return tok;
@@ -141,9 +146,18 @@ Token next_token(Lexer *l) {
     if (c == '"') {
         int i = 0;
         advance(l); 
-        while (peek(l) != '"' && peek(l) != '\0')
+        
+        while (peek(l) != '"' && peek(l) != '\0' && peek(l) != '\n') {
             tok.value[i++] = advance(l);
-        if (peek(l) == '"') advance(l); 
+        }
+        
+        if (peek(l) != '"') {
+            tok.type = TOKEN_ERROR;
+            strcpy(tok.value, "Erro: String nao fechada");
+            return tok;
+        }
+
+        advance(l); 
         tok.value[i] = '\0';
         tok.type = TOKEN_LITERAL_STR;
         return tok;
@@ -153,9 +167,17 @@ Token next_token(Lexer *l) {
     if (c == '\'') {
         int i = 0;
         advance(l); 
-        while (peek(l) != '\'' && peek(l) != '\0')
+        while (peek(l) != '\'' && peek(l) != '\0' && peek(l) != '\n') {
             tok.value[i++] = advance(l);
-        if (peek(l) == '\'') advance(l); 
+        }
+
+        if (peek(l) != '\'') {
+            tok.type = TOKEN_ERROR;
+            strcpy(tok.value, "Erro: Char nao fechado");
+            return tok;
+        }
+
+        advance(l);
         tok.value[i] = '\0';
         tok.type = TOKEN_LITERAL_CHAR;
         return tok;

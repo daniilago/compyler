@@ -15,6 +15,7 @@ typedef enum {
     TOKEN_LITERAL_STR,
     TOKEN_LITERAL_CHAR,
     TOKEN_EOF,
+    TOKEN_ERROR,
     TOKEN_UNKNOWN
 } TokenType;
 
