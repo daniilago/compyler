@@ -1,22 +1,14 @@
-CC      = gcc
-CFLAGS  = -Wall -Wextra -g
+CC     = gcc
+CFLAGS = -Wall -g
+SRC    = main.c lexer.c reader.c
 
-SRC     = main.c lexer.c reader.c
-OBJ     = $(SRC:.c=.o)
-TARGET  = main
+all: $(SRC)
+	$(CC) $(CFLAGS) -o main $(SRC)
 
-all: $(TARGET)
-
-$(TARGET): $(OBJ)
-	$(CC) $(CFLAGS) -o $@ $^
-
-%.o: %.c
-	$(CC) $(CFLAGS) -c $< -o $@
+run: all
+	./main input.txt
 
 clean:
-	rm -f $(OBJ) $(TARGET)
+	rm -f main
 
-run: $(TARGET)
-	./$(TARGET) input.txt
-
-.PHONY: all clean run
+.PHONY: all run clean

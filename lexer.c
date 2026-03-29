@@ -6,11 +6,6 @@ static const char *RESERVED[] = {
     NULL
 };
 
-// static int str_eq(const char *a, const char *b) {
-//     while (*a && *b) { if (*a != *b) return 0; a++; b++; }
-//     return *a == *b;
-// }
-
 static int is_reserved(const char *word) {
     int i;
     for (i = 0; RESERVED[i] != NULL; i++)
@@ -46,12 +41,6 @@ static void skip_whitespace(Lexer *l) {
     }
 }
 
-// static void str_ncopy(char *dst, const char *src, int n) {
-//     int i;
-//     for (i = 0; i < n; i++) dst[i] = src[i];
-//     dst[n] = '\0';
-// }
-
 static const char *token_type_str(TokenType t) {
     switch (t) {
         case TOKEN_NUMBER:        return "NUMBER";
@@ -70,9 +59,11 @@ static const char *token_type_str(TokenType t) {
 }
 
 void print_token(const Token *tok) {
-    printf("{ [l=%d][c=%d]", tok->line, tok->col);
-    printf("[type=%s]", token_type_str(tok->type));
-    printf("[value='%s'] }\n", tok->value);
+    printf("Line: %3d | Col: %3d | Type: %-15s | Value: '%s'\n", 
+           tok->line, 
+           tok->col, 
+           token_type_str(tok->type), 
+           tok->value);
 }
 
 Token next_token(Lexer *l) {
@@ -105,14 +96,13 @@ Token next_token(Lexer *l) {
         while (!(peek(l) == '*' && peek2(l) == '/') && peek(l) != '\0') {
             tok.value[i++] = advance(l);
         }
-        // SE CHEGOU NO \0 SEM ACHAR O */, É ERRO!
         if (peek(l) == '\0') {
             tok.type = TOKEN_ERROR;
-            strcpy(tok.value, "Erro: Comentario de bloco nao fechado");
+            strcpy(tok.value, "Error: Block comment not closed");
             return tok;
         }
-        tok.value[i++] = advance(l); // consome '*'
-        tok.value[i++] = advance(l); // consome '/'
+        tok.value[i++] = advance(l); 
+        tok.value[i++] = advance(l); 
         tok.value[i] = '\0';
         tok.type = TOKEN_COMMENT;
         return tok;
@@ -122,10 +112,23 @@ Token next_token(Lexer *l) {
     if (is_digit(c)) {
         int start = l->pos;
         while (is_digit(peek(l))) advance(l);
-        if (peek(l) == '.' && is_digit(peek2(l))) {
+
+        if (peek(l) == '.') {
             advance(l); 
+            
             while (is_digit(peek(l))) advance(l);
+
+            if (is_alpha(peek(l)) && peek(l) != ' ' && peek(l) != '\t' && peek(l) != '\n' && peek(l) != '\0') {
+                while (peek(l) != ' ' && peek(l) != '\t' && peek(l) != '\n' && peek(l) != '\0') {
+                    advance(l);
+                }
+
+                tok.type = TOKEN_ERROR;
+                strcpy(tok.value, "Error: Invalid number format");
+                return tok;
+            }
         }
+
         strncpy(tok.value, l->src + start, l->pos - start);
         tok.value[l->pos - start] = '\0';
         tok.type = TOKEN_NUMBER;
@@ -145,7 +148,7 @@ Token next_token(Lexer *l) {
     // Literal string
     if (c == '"') {
         int i = 0;
-        advance(l); 
+        tok.value[i++] = advance(l); 
         
         while (peek(l) != '"' && peek(l) != '\0' && peek(l) != '\n') {
             tok.value[i++] = advance(l);
@@ -153,11 +156,11 @@ Token next_token(Lexer *l) {
         
         if (peek(l) != '"') {
             tok.type = TOKEN_ERROR;
-            strcpy(tok.value, "Erro: String nao fechada");
+            strcpy(tok.value, "Error: String not closed");
             return tok;
         }
 
-        advance(l); 
+        tok.value[i++] = advance(l); 
         tok.value[i] = '\0';
         tok.type = TOKEN_LITERAL_STR;
         return tok;
@@ -166,18 +169,18 @@ Token next_token(Lexer *l) {
     // Literal char
     if (c == '\'') {
         int i = 0;
-        advance(l); 
+        tok.value[i++] = advance(l); 
         while (peek(l) != '\'' && peek(l) != '\0' && peek(l) != '\n') {
             tok.value[i++] = advance(l);
         }
 
         if (peek(l) != '\'') {
             tok.type = TOKEN_ERROR;
-            strcpy(tok.value, "Erro: Char nao fechado");
+            strcpy(tok.value, "Error: Char not closed");
             return tok;
         }
 
-        advance(l);
+        tok.value[i++] = advance(l);
         tok.value[i] = '\0';
         tok.type = TOKEN_LITERAL_CHAR;
         return tok;
@@ -189,7 +192,7 @@ Token next_token(Lexer *l) {
     tok.value[0] = c;
     tok.value[1] = '\0';
 
-    // Operators with two caracteres: ==, !=, <=, >=, &&, ||
+    // Operators with two caracteres
     char next = peek(l);
 
     if (c == '=' && next == '=') { advance(l); strncpy(tok.value, "==", 2); tok.value[2] = '\0'; tok.type = TOKEN_LOGIC_OP; return tok; }

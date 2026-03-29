@@ -1,8 +1,8 @@
 int main() {
-    @
+    123.23;
     // variaveis
     "ola 24"
-    'o
+    'o'
     int x = 10;
     int y = 3;
     float media = 0.0;
