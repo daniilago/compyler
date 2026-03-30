@@ -115,6 +115,16 @@ Token next_token(Lexer *l) {
 
         if (peek(l) == '.') {
             advance(l); 
+
+            if (is_alpha(peek(l)) || peek(l) == ' ' || peek(l) == '\t' || peek(l) == '\n' || peek(l) == '\0') {
+                while (peek(l) != ' ' && peek(l) != '\t' && peek(l) != '\n' && peek(l) != '\0') {
+                    advance(l);
+                }
+
+                tok.type = TOKEN_ERROR;
+                strcpy(tok.value, "Error: Invalid number format");
+                return tok;
+            }
             
             while (is_digit(peek(l))) advance(l);
 
@@ -127,6 +137,14 @@ Token next_token(Lexer *l) {
                 strcpy(tok.value, "Error: Invalid number format");
                 return tok;
             }
+        } else if (is_alpha(peek(l)) && peek(l) != ' ' && peek(l) != '\t' && peek(l) != '\n' && peek(l) != '\0') {
+            while (peek(l) != ' ' && peek(l) != '\t' && peek(l) != '\n' && peek(l) != '\0') {
+                advance(l);
+            }
+
+            tok.type = TOKEN_ERROR;
+            strcpy(tok.value, "Error: Invalid number format");
+            return tok;
         }
 
         strncpy(tok.value, l->src + start, l->pos - start);

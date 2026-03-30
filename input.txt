@@ -1,5 +1,6 @@
 int main() {
     123.23;
+    123.a
     // variaveis
     "ola 24"
     'o'
