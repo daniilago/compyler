@@ -1,4 +1,5 @@
 #include "lexer.h"
+#include "parser.h"
 #include "reader.h"
 
 int main(int argc, char *argv[]) {
@@ -8,16 +9,11 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    Lexer l;
+    Lexer  l;
+    Parser p;
     lexer_init(&l, src);
-
-    Token tok;
-    tok = next_token(&l);
-
-    while (tok.type != TOKEN_EOF){
-        print_token(&tok);
-        tok = next_token(&l);
-    }
+    parser_init(&p, &l);
+    parser_run(&p);
 
     free_file(src);
 

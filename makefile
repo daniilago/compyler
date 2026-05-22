@@ -1,6 +1,6 @@
 CC     = gcc
 CFLAGS = -Wall -g
-SRC    = main.c lexer.c reader.c
+SRC    = main.c lexer.c parser.c reader.c
 
 all: $(SRC)
 	$(CC) $(CFLAGS) -o main $(SRC)

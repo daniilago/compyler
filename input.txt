@@ -1,14 +1,11 @@
 int main() {
-    123.23;
-    123.a
+    float a = 123.23;
     // variaveis
-    "ola 24"
-    'o'
     int x = 10;
     int y = 3;
     float media = 0.0;
 
-    /* calcula soma 
+    /* calcula soma */
     int resultado = soma(x, y);
 
     return 0;
