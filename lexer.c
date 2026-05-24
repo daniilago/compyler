@@ -1,5 +1,6 @@
 #include "lexer.h"
 
+//  Reserved words
 static const char *RESERVED[] = {
     "if", "else", "while", "for", "return",
     "int", "float", "char", "void", "do",
@@ -13,6 +14,35 @@ static int is_reserved(const char *word) {
     return 0;
 }
 
+//  TokenList
+void token_list_init(TokenList *tl) {
+    tl->capacity = 64;
+    tl->count = 0;
+    tl->tokens = malloc(tl->capacity * sizeof(Token));
+}
+
+void token_list_push(TokenList *tl, Token tok) {
+    if (tl->count >= tl->capacity) {
+        tl->capacity *= 2;
+        tl->tokens = realloc(tl->tokens, tl->capacity * sizeof(Token));
+    }
+    tl->tokens[tl->count++] = tok;
+}
+
+void token_list_free(TokenList *tl) {
+    free(tl->tokens);
+    tl->tokens   = NULL;
+    tl->count    = 0;
+    tl->capacity = 0;
+}
+
+void token_list_print(const TokenList *tl) {
+    int i;
+    for (i = 0; i < tl->count; i++)
+        print_token(&tl->tokens[i]);
+}
+
+//  Lexer — auxiliary
 void lexer_init(Lexer *l, const char *src) {
     l->src = src;
     l->pos = 0;
@@ -22,6 +52,7 @@ void lexer_init(Lexer *l, const char *src) {
 
 static char peek(Lexer *l)      { return l->src[l->pos]; }
 static char peek2(Lexer *l)     { return l->src[l->pos] ? l->src[l->pos + 1] : '\0'; }
+
 static char advance(Lexer *l) { 
     char c = l->src[l->pos++];
     if (c == '\n') { 
@@ -31,9 +62,10 @@ static char advance(Lexer *l) {
     }
     return c; 
 }
-static int  is_digit(char c)    { return c >= '0' && c <= '9'; }
-static int  is_alpha(char c)    { return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_'; }
-static int  is_alnum(char c)    { return is_digit(c) || is_alpha(c); }
+
+static int  is_digit(char c) { return c >= '0' && c <= '9'; }
+static int  is_alpha(char c) { return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_'; }
+static int  is_alnum(char c) { return is_digit(c) || is_alpha(c); }
 
 static void skip_whitespace(Lexer *l) {
     while (peek(l) == ' ' || peek(l) == '\t' || peek(l) == '\n') {
@@ -41,6 +73,7 @@ static void skip_whitespace(Lexer *l) {
     }
 }
 
+//  Print 
 static const char *token_type_str(TokenType t) {
     switch (t) {
         case TOKEN_NUMBER:        return "NUMBER";
@@ -66,6 +99,7 @@ void print_token(const Token *tok) {
            tok->value);
 }
 
+//  Next_token
 Token next_token(Lexer *l) {
     Token tok;
     skip_whitespace(l);
@@ -242,4 +276,18 @@ Token next_token(Lexer *l) {
     tok.type = TOKEN_UNKNOWN;
 
     return tok;
+}
+
+//  lexer_tokenize - init
+TokenList lexer_tokenize(Lexer *l) {
+    TokenList tl;
+    token_list_init(&tl);
+ 
+    Token tok;
+    do {
+        tok = next_token(l);
+        token_list_push(&tl, tok);
+    } while (tok.type != TOKEN_EOF);
+ 
+    return tl;
 }

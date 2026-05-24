@@ -3,6 +3,9 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
+
+//  Tipos de token  
 
 typedef enum {
     TOKEN_NUMBER,
@@ -26,6 +29,21 @@ typedef struct {
     int col;
 } Token;
 
+//  Lista de tokens 
+
+typedef struct {
+    Token *tokens;
+    int    count;
+    int    capacity;
+} TokenList;
+ 
+void  token_list_init(TokenList *tl);
+void  token_list_push(TokenList *tl, Token tok);
+void  token_list_free(TokenList *tl);
+void  token_list_print(const TokenList *tl);
+
+//  Lexer  
+
 typedef struct {
     const char *src;
     int pos;
@@ -35,6 +53,7 @@ typedef struct {
 
 void lexer_init(Lexer *l, const char *src);
 Token next_token(Lexer *l);
+TokenList lexer_tokenize(Lexer *l);
 void print_token(const Token *tok);
 
 #endif

@@ -1,7 +1,11 @@
-int main() {
+int soma(){
+}
+x=10;
+int main(int a, int b) {
     float a = 123.23;
+    x = 10;
     // variaveis
-    int x = 10;
+    x = 10;
     int y = 3;
     float media = 0.0;
 
