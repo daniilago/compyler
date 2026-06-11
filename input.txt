@@ -1,16 +1,24 @@
-int soma(){
+/* teste teste*/
+
+int x = 100;
+
+int calcular_soma(int a, int b) {
+    a = a + b;
 }
-x=10;
-int main(int a, int b) {
-    float a = 123.23;
-    x = 10;
-    // variaveis
-    x = 10;
-    int y = 3;
-    float media = 0.0;
 
-    /* calcula soma */
-    int resultado = soma(x, y);
+void main() {
+    float a = 222.2;
+    char mensagem = "aaaaa";
+    int contador = 0;
+    x = 10/10;
+    if (taxa_global >= 50) {
+        contador = contador + 1;
+    }
 
-    return 0;
+    while (contador < 10) {
+        contador = contador + 2;
+        calcular_soma(contador, 5);
+    }
+
+    return;
 }

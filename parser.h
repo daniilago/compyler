@@ -38,9 +38,9 @@ typedef struct ASTNode {
 
 // Parser
 typedef struct {
-    TokenList *tl;        /* lista de tokens do lexer  */
-    int        pos;       /* indice do token atual     */
-    int        had_error; /* 1 se encontrou algum erro */
+    TokenList *tl;        
+    int        pos;      
+    int        had_error; 
 } Parser;
 
 void parser_init(Parser *p, TokenList *tl);
