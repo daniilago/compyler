@@ -23,6 +23,7 @@ typedef enum {
     NODE_IDENT,        
     NODE_LITERAL_STR,  
     NODE_LITERAL_CHAR,  
+    NODE_ERROR,
 } NodeType;
 
 // AST
@@ -36,11 +37,40 @@ typedef struct ASTNode {
     int              n_children;
 } ASTNode;
 
+typedef enum {
+    SYM_VAR,
+    SYM_FUNC
+} SymbolKind;
+
+typedef struct Symbol {
+    char       name[256];
+    char       data_type[64];
+    SymbolKind kind;
+    int        n_params;
+    int        line;
+    int        col;
+} Symbol;
+
+typedef struct Scope {
+    Symbol        *symbols;
+    int            count;
+    int            capacity;
+    struct Scope  *parent; 
+} Scope;
+
+Scope  *scope_new(Scope *parent);
+void    scope_free(Scope *scope);
+Symbol *scope_lookup(Scope *scope, const char *name); 
+Symbol *scope_lookup_local(Scope *scope, const char *name); 
+void    scope_add(Scope *scope, Symbol sym);
+
 // Parser
 typedef struct {
-    TokenList *tl;        
-    int        pos;      
-    int        had_error; 
+    TokenList *tl;
+    int        pos;
+    int        had_error;
+    Scope     *global_scope; 
+    Scope     *current_scope; 
 } Parser;
 
 void parser_init(Parser *p, TokenList *tl);
