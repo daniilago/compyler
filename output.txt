@@ -1,0 +1,49 @@
+section .text
+
+main:
+    ; float a = ...
+    mov rax, 222.2
+    mov r8, rax
+    ; int mensagem = ...
+    mov rax, 5
+    mov r9, rax
+    ; int contador = ...
+    mov rax, 0
+    mov r10, rax
+    ; if
+    mov rax, r10
+    mov rdx, 50
+    cmp rax, rdx
+    setge al
+    test al, al
+    je .L0
+    ; contador = ...
+    mov rax, r10
+    mov rdx, 1
+    add rax, rdx
+    mov r10, rax
+    jmp .L1
+.L0:
+    ; contador = ...
+    mov rax, r10
+    mov rdx, r9
+    sub rax, rdx
+    mov r10, rax
+.L1:
+.L2:
+    ; while
+    mov rax, r10
+    mov rdx, 10
+    cmp rax, rdx
+    setl al
+    test al, al
+    je .L3
+    ; contador = ...
+    mov rax, r10
+    mov rdx, 2
+    add rax, rdx
+    mov r10, rax
+    jmp .L2
+.L3:
+    ; return
+    mov rax, 0
