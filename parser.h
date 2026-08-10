@@ -3,6 +3,7 @@
 
 #include "lexer.h"
 #include <stdlib.h>
+#include <stdarg.h>
 
 // AST node types
 typedef enum {
@@ -49,6 +50,7 @@ typedef struct Symbol {
     int        n_params;
     int        line;
     int        col;
+    int        offset;
 } Symbol;
 
 typedef struct Scope {
@@ -64,6 +66,13 @@ Symbol *scope_lookup(Scope *scope, const char *name);
 Symbol *scope_lookup_local(Scope *scope, const char *name); 
 void    scope_add(Scope *scope, Symbol sym);
 
+typedef struct {
+    FILE *out;
+    int   label_count;
+    int   stack_offset;
+    int   in_main;
+} CodeGen;
+
 // Parser
 typedef struct {
     TokenList *tl;
@@ -71,10 +80,12 @@ typedef struct {
     int        had_error;
     Scope     *global_scope; 
     Scope     *current_scope; 
+    CodeGen    cg;
 } Parser;
 
-void parser_init(Parser *p, TokenList *tl);
+void parser_init(Parser *p, TokenList *tl, const char *output_file);
 ASTNode *parser_run(Parser *p);
+void parser_close(Parser *p);
  
 void ast_print(ASTNode *node, int depth);
 void ast_free(ASTNode *node);

@@ -1,26 +1,29 @@
 /* TESTE PARA ERROS */
-
 x = 100;
-
 int global_var = 10;
+int global_var = 20;
 
-void calcular_dados(valor) {
+void soma(int a, int b) {
+    int a = 3;
+    return;
+}
+
+void calcular_dados(int valor) {
+    char a = "a";
+    int c = a * 10 + 5;
     
-    char texto = "Esta string esqueceram de fechar
-
     float pi = 3.14.15;
-
     int numero_valido = 50
-
-    processar(numero_valido);
-
-    if (numero_valido > 10 {
-        global_var = 20;
-    }
-
+    processar(numero_valido, numero);
     numero_valido = 100
     
     global_var = 0;
+
+    int resultado = soma(numero_valido);
+    int outro = 5;
+    int outro = 10;
+    nao_existe = 99;
+    int z = "texto";
 
     return;
 }
