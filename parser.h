@@ -50,7 +50,7 @@ typedef struct Symbol {
     int        n_params;
     int        line;
     int        col;
-    int        offset;
+    int        reg_index;
 } Symbol;
 
 typedef struct Scope {
@@ -69,8 +69,9 @@ void    scope_add(Scope *scope, Symbol sym);
 typedef struct {
     FILE *out;
     int   label_count;
-    int   stack_offset;
     int   in_main;
+    int   reg_count;
+    int   had_error;
 } CodeGen;
 
 // Parser
@@ -79,16 +80,15 @@ typedef struct {
     int        pos;
     int        had_error;
     Scope     *global_scope; 
-    Scope     *current_scope; 
-    CodeGen    cg;
+    Scope     *current_scope;
+    CodeGen    cg;        
 } Parser;
 
-void parser_init(Parser *p, TokenList *tl, const char *output_file);
+void     parser_init(Parser *p, TokenList *tl, const char *output_file);
 ASTNode *parser_run(Parser *p);
-void parser_close(Parser *p);
+void     parser_close(Parser *p);
  
 void ast_print(ASTNode *node, int depth);
 void ast_free(ASTNode *node);
-
 
 #endif

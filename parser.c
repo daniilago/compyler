@@ -1,9 +1,17 @@
 #include "parser.h"
+#include <stdarg.h>
 
+#define N_VAR_REGS 8
+
+// AST
+
+<<<<<<< HEAD
 /* ==================================================================== */
 /*  AST                                                                 */
 /* ==================================================================== */
 
+=======
+>>>>>>> 39b4ebf07591601459a221af0331004d385cdc2a
 static ASTNode *node_new(NodeType type, const char *value, int line, int col) {
     ASTNode *n = malloc(sizeof(ASTNode));
     n->type = type;
@@ -70,9 +78,13 @@ void ast_free(ASTNode *node) {
     free(node);
 }
 
+<<<<<<< HEAD
 /* ==================================================================== */
 /*  Tabela de simbolos                                                  */
 /* ==================================================================== */
+=======
+// Tabela de simbolos
+>>>>>>> 39b4ebf07591601459a221af0331004d385cdc2a
 
 Scope *scope_new(Scope *parent) {
     Scope *s    = malloc(sizeof(Scope));
@@ -114,6 +126,7 @@ Symbol *scope_lookup(Scope *scope, const char *name) {
     return NULL;
 }
 
+<<<<<<< HEAD
 /* ==================================================================== */
 /*  Gerador de codigo — auxiliares                                      */
 /* ==================================================================== */
@@ -123,6 +136,16 @@ Symbol *scope_lookup(Scope *scope, const char *name) {
  * Instrucoes recebem um tab de indentacao; labels nao.
  */
 static void emit(CodeGen *cg, const char *fmt, ...) {
+=======
+// Gerador de codigo
+
+static const char *VAR_REGS[] = {
+    "r8", "r9", "r10", "r11", "r12", "r13", "r14", "r15"
+};
+
+static void emit(CodeGen *cg, const char *fmt, ...) {
+    if (cg->had_error) return;
+>>>>>>> 39b4ebf07591601459a221af0331004d385cdc2a
     va_list args;
     va_start(args, fmt);
     vfprintf(cg->out, fmt, args);
@@ -130,15 +153,19 @@ static void emit(CodeGen *cg, const char *fmt, ...) {
     va_end(args);
 }
 
+<<<<<<< HEAD
 /*
  * new_label: gera um label unico incrementando label_count.
  * Ex: .L0, .L1, .L2 ...
  * Escreve o label no buffer passado.
  */
+=======
+>>>>>>> 39b4ebf07591601459a221af0331004d385cdc2a
 static void new_label(CodeGen *cg, char *buf, int size) {
     snprintf(buf, size, ".L%d", cg->label_count++);
 }
 
+<<<<<<< HEAD
 /*
  * alloc_var: aloca espaco para uma variavel local na stack.
  * Cada variavel ocupa 8 bytes (simplificacao — mesmo para int e char).
@@ -163,11 +190,45 @@ static int alloc_var(CodeGen *cg) {
  */
 static void gen_expr(Parser *p, ASTNode *expr);
 
+=======
+static int alloc_var(CodeGen *cg) {
+    int idx = cg->reg_count;
+    if (idx < N_VAR_REGS)
+        cg->reg_count++;
+    return idx;
+}
+
+static const char *var_reg(Symbol *sym) {
+    if (sym->reg_index < N_VAR_REGS)
+        return VAR_REGS[sym->reg_index];
+    return "r15";
+}
+
+static void gen_expr(Parser *p, ASTNode *expr);
+
+static void gen_expr_into(Parser *p, ASTNode *expr, const char *reg) {
+    CodeGen *cg = &p->cg;
+    if (!expr || !cg->in_main) return;
+
+    if (expr->type == NODE_NUMBER) {
+        emit(cg, "    mov %s, %s", reg, expr->value);
+    } else if (expr->type == NODE_IDENT) {
+        Symbol *sym = scope_lookup(p->current_scope, expr->value);
+        if (sym) emit(cg, "    mov %s, %s", reg, var_reg(sym));
+    } else {
+        gen_expr(p, expr);
+        if (strcmp(reg, "rax") != 0)
+            emit(cg, "    mov %s, rax", reg);
+    }
+}
+
+>>>>>>> 39b4ebf07591601459a221af0331004d385cdc2a
 static void gen_expr(Parser *p, ASTNode *expr) {
     CodeGen *cg = &p->cg;
     if (!expr || !cg->in_main) return;
 
     switch (expr->type) {
+<<<<<<< HEAD
 
         /* NUMBER: carrega o valor literal direto em rax */
         case NODE_NUMBER:
@@ -246,6 +307,35 @@ static void gen_expr(Parser *p, ASTNode *expr) {
                 emit(cg, "    setge al");
                 emit(cg, "    movzx rax, al");
             }
+=======
+        case NODE_NUMBER:
+            emit(cg, "    mov rax, %s", expr->value);
+            break;
+        case NODE_IDENT: {
+            Symbol *sym = scope_lookup(p->current_scope, expr->value);
+            if (sym)
+                emit(cg, "    mov rax, %s", var_reg(sym));
+            break;
+        }
+
+        case NODE_BINOP: {
+            if (expr->n_children < 2) break;
+
+            gen_expr_into(p, expr->children[0], "rax");
+            gen_expr_into(p, expr->children[1], "rdx");
+
+            if      (strcmp(expr->value, "+") == 0) emit(cg, "    add rax, rdx");
+            else if (strcmp(expr->value, "-") == 0) emit(cg, "    sub rax, rdx");
+            else if (strcmp(expr->value, "*") == 0) emit(cg, "    imul rax, rdx");
+            else if (strcmp(expr->value, "/") == 0) { emit(cg, "    cqo"); emit(cg, "    idiv rdx"); }
+            else if (strcmp(expr->value, "%") == 0) { emit(cg, "    cqo"); emit(cg, "    idiv rdx"); emit(cg, "    mov rax, rdx"); }
+            else if (strcmp(expr->value, "==") == 0) { emit(cg, "    cmp rax, rdx"); emit(cg, "    sete al");  }
+            else if (strcmp(expr->value, "!=") == 0) { emit(cg, "    cmp rax, rdx"); emit(cg, "    setne al"); }
+            else if (strcmp(expr->value, "<")  == 0) { emit(cg, "    cmp rax, rdx"); emit(cg, "    setl al");  }
+            else if (strcmp(expr->value, ">")  == 0) { emit(cg, "    cmp rax, rdx"); emit(cg, "    setg al");  }
+            else if (strcmp(expr->value, "<=") == 0) { emit(cg, "    cmp rax, rdx"); emit(cg, "    setle al"); }
+            else if (strcmp(expr->value, ">=") == 0) { emit(cg, "    cmp rax, rdx"); emit(cg, "    setge al"); }
+>>>>>>> 39b4ebf07591601459a221af0331004d385cdc2a
             break;
         }
 
@@ -254,9 +344,13 @@ static void gen_expr(Parser *p, ASTNode *expr) {
     }
 }
 
+<<<<<<< HEAD
 /* ==================================================================== */
 /*  Navegacao na lista de tokens                                        */
 /* ==================================================================== */
+=======
+// Navegacao na lista de tokens
+>>>>>>> 39b4ebf07591601459a221af0331004d385cdc2a
 
 static Token *current(Parser *p) { return &p->tl->tokens[p->pos]; }
 
@@ -272,6 +366,7 @@ static int check_value(Parser *p, const char *val) { return strcmp(current(p)->v
 static int expect(Parser *p, TokenType type, const char *msg) {
     if (check(p, type)) { advance(p); return 1; }
     p->had_error = 1;
+    p->cg.had_error = 1;
     printf("[Syntatic error][l=%d][c=%d] %s, found: '%s'\n",
            current(p)->line, current(p)->col, msg, current(p)->value);
     return 0;
@@ -280,6 +375,7 @@ static int expect(Parser *p, TokenType type, const char *msg) {
 static int expect_value(Parser *p, const char *val, const char *msg) {
     if (check_value(p, val)) { advance(p); return 1; }
     p->had_error = 1;
+    p->cg.had_error = 1;
     printf("[Syntatic error][l=%d][c=%d] %s, found: '%s'\n",
            current(p)->line, current(p)->col, msg, current(p)->value);
     return 0;
@@ -293,12 +389,17 @@ static void synchronize(Parser *p) {
     }
 }
 
+<<<<<<< HEAD
 /* ==================================================================== */
 /*  Semantica                                                           */
 /* ==================================================================== */
+=======
+// Semantica
+>>>>>>> 39b4ebf07591601459a221af0331004d385cdc2a
 
 static void semantic_error(Parser *p, int line, int col, const char *msg, const char *found) {
     p->had_error = 1;
+    p->cg.had_error = 1;
     if (found)
         printf("[Semantic error][l=%d][c=%d] %s: '%s'\n", line, col, msg, found);
     else
@@ -364,17 +465,25 @@ static void check_expression(Parser *p, ASTNode *expr) {
     }
 }
 
+<<<<<<< HEAD
 /* ==================================================================== */
 /*  Forward declarations                                                */
 /* ==================================================================== */
+=======
+// Forward declarations
+>>>>>>> 39b4ebf07591601459a221af0331004d385cdc2a
 
 static ASTNode *parse_statement(Parser *p);
 static ASTNode *parse_expression(Parser *p);
 static ASTNode *parse_block(Parser *p);
 
+<<<<<<< HEAD
 /* ==================================================================== */
 /*  Expressoes                                                          */
 /* ==================================================================== */
+=======
+// Expressoes
+>>>>>>> 39b4ebf07591601459a221af0331004d385cdc2a
 
 static ASTNode *parse_primary(Parser *p) {
     Token *tok = current(p);
@@ -444,6 +553,7 @@ static ASTNode *parse_expression(Parser *p) {
     return left;
 }
 
+<<<<<<< HEAD
 /* ==================================================================== */
 /*  Statements com geracao de codigo                                    */
 /* ==================================================================== */
@@ -461,13 +571,21 @@ static ASTNode *parse_expression(Parser *p) {
  *   add rax, rcx
  *   mov [rbp-16], rax   ; armazena em x
  */
+=======
+// Statements com geracao de codigo
+
+>>>>>>> 39b4ebf07591601459a221af0331004d385cdc2a
 static ASTNode *parse_declaration(Parser *p) {
     Token *type_tok = current(p);
     ASTNode *n = node_new(NODE_DECL, "", type_tok->line, type_tok->col);
     strncpy(n->data_type, type_tok->value, 63);
     advance(p);
 
+<<<<<<< HEAD
     int sem_ok = 1; /* flag: sem erros semanticos nesta declaracao */
+=======
+    int sem_ok = 1;
+>>>>>>> 39b4ebf07591601459a221af0331004d385cdc2a
 
     if (check(p, TOKEN_IDENT)) {
         Token *name_tok = current(p);
@@ -485,11 +603,19 @@ static ASTNode *parse_declaration(Parser *p) {
             sym.name[255] = '\0';
             strncpy(sym.data_type, n->data_type, 63);
             sym.data_type[63] = '\0';
+<<<<<<< HEAD
             sym.kind     = SYM_VAR;
             sym.n_params = 0;
             sym.line     = name_tok->line;
             sym.col      = name_tok->col;
             sym.offset   = alloc_var(&p->cg); /* ex: -8, -16, -24 */
+=======
+            sym.kind      = SYM_VAR;
+            sym.n_params  = 0;
+            sym.line      = name_tok->line;
+            sym.col       = name_tok->col;
+            sym.reg_index = alloc_var(&p->cg); 
+>>>>>>> 39b4ebf07591601459a221af0331004d385cdc2a
             scope_add(p->current_scope, sym);
         }
         advance(p);
@@ -502,7 +628,6 @@ static ASTNode *parse_declaration(Parser *p) {
         advance(p);
         ASTNode *expr = parse_expression(p);
         node_add_child(n, expr);
-
         check_expression(p, expr);
 
         const char *etype = expr_type(p, expr);
@@ -515,16 +640,21 @@ static ASTNode *parse_declaration(Parser *p) {
             sem_ok = 0;
         }
 
+<<<<<<< HEAD
         /*
          * Gera codigo apenas se:
          *   - estamos dentro da main
          *   - nao houve erros semanticos nesta declaracao
          */
         if (p->cg.in_main && sem_ok && !p->had_error) {
+=======
+        if (p->cg.in_main && sem_ok) {
+>>>>>>> 39b4ebf07591601459a221af0331004d385cdc2a
             Symbol *sym = scope_lookup(p->current_scope, n->value);
             if (sym) {
                 emit(&p->cg, "    ; %s %s = ...", n->data_type, n->value);
                 gen_expr(p, expr);
+<<<<<<< HEAD
                 emit(&p->cg, "    mov [rbp%+d], rax", sym->offset);
             }
         }
@@ -533,11 +663,21 @@ static ASTNode *parse_declaration(Parser *p) {
          * Declaracao sem inicializacao: zera a posicao na stack.
          * int x;  →  mov qword [rbp-8], 0
          */
+=======
+                emit(&p->cg, "    mov %s, rax", var_reg(sym));
+            }
+        }
+    } else {
+>>>>>>> 39b4ebf07591601459a221af0331004d385cdc2a
         if (p->cg.in_main && sem_ok) {
             Symbol *sym = scope_lookup(p->current_scope, n->value);
             if (sym) {
                 emit(&p->cg, "    ; %s %s", n->data_type, n->value);
+<<<<<<< HEAD
                 emit(&p->cg, "    mov qword [rbp%+d], 0", sym->offset);
+=======
+                emit(&p->cg, "    xor %s, %s", var_reg(sym), var_reg(sym));
+>>>>>>> 39b4ebf07591601459a221af0331004d385cdc2a
             }
         }
     }
@@ -588,7 +728,11 @@ static ASTNode *parse_assignment(Parser *p) {
     if (p->cg.in_main && sem_ok && sym) {
         emit(&p->cg, "    ; %s = ...", tok->value);
         gen_expr(p, expr);
+<<<<<<< HEAD
         emit(&p->cg, "    mov [rbp%+d], rax", sym->offset);
+=======
+        emit(&p->cg, "    mov %s, rax", var_reg(sym));
+>>>>>>> 39b4ebf07591601459a221af0331004d385cdc2a
     }
 
     expect_value(p, ";", "Expected ';' after assignment");
@@ -626,7 +770,11 @@ static ASTNode *parse_if(Parser *p) {
     if (p->cg.in_main) {
         emit(&p->cg, "    ; if");
         gen_expr(p, cond);
+<<<<<<< HEAD
         emit(&p->cg, "    cmp rax, 0");
+=======
+        emit(&p->cg, "    test al, al");  
+>>>>>>> 39b4ebf07591601459a221af0331004d385cdc2a
         emit(&p->cg, "    je %s", label_else);
     }
 
@@ -675,7 +823,11 @@ static ASTNode *parse_while(Parser *p) {
         emit(&p->cg, "%s:", label_start);
         emit(&p->cg, "    ; while");
         gen_expr(p, cond);
+<<<<<<< HEAD
         emit(&p->cg, "    cmp rax, 0");
+=======
+        emit(&p->cg, "    test al, al");  
+>>>>>>> 39b4ebf07591601459a221af0331004d385cdc2a
         emit(&p->cg, "    je %s", label_end);
     }
 
@@ -712,17 +864,24 @@ static ASTNode *parse_return(Parser *p) {
         if (p->cg.in_main) {
             emit(&p->cg, "    ; return");
             gen_expr(p, expr);
+<<<<<<< HEAD
             emit(&p->cg, "    mov rsp, rbp");
             emit(&p->cg, "    pop rbp");
             emit(&p->cg, "    ret");
+=======
+>>>>>>> 39b4ebf07591601459a221af0331004d385cdc2a
         }
     } else {
         if (p->cg.in_main) {
             emit(&p->cg, "    ; return");
+<<<<<<< HEAD
             emit(&p->cg, "    xor rax, rax");  /* return 0 implicito */
             emit(&p->cg, "    mov rsp, rbp");
             emit(&p->cg, "    pop rbp");
             emit(&p->cg, "    ret");
+=======
+            emit(&p->cg, "    xor rax, rax");
+>>>>>>> 39b4ebf07591601459a221af0331004d385cdc2a
         }
     }
 
@@ -794,9 +953,7 @@ static ASTNode *parse_statement(Parser *p) {
     return NULL;
 }
 
-/* ==================================================================== */
-/*  Funcao                                                              */
-/* ==================================================================== */
+// Funcao
 
 static ASTNode *parse_function(Parser *p) {
     Token *tok = current(p);
@@ -825,6 +982,7 @@ static ASTNode *parse_function(Parser *p) {
     Scope *outer_scope = p->current_scope;
     p->current_scope   = func_scope;
 
+<<<<<<< HEAD
     /* ativa geracao de codigo apenas para a main */
     int was_in_main = p->cg.in_main;
     if (name_tok && strcmp(name_tok->value, "main") == 0) {
@@ -844,6 +1002,15 @@ static ASTNode *parse_function(Parser *p) {
         emit(&p->cg, "    push rbp");
         emit(&p->cg, "    mov rbp, rsp");
         emit(&p->cg, "    sub rsp, 256");
+=======
+    int was_in_main   = p->cg.in_main;
+    int was_reg_count = p->cg.reg_count;
+    if (name_tok && strcmp(name_tok->value, "main") == 0) {
+        p->cg.in_main    = 1;
+        p->cg.reg_count  = 0;
+
+        emit(&p->cg, "main:");
+>>>>>>> 39b4ebf07591601459a221af0331004d385cdc2a
     }
 
     int n_params = 0;
@@ -868,7 +1035,11 @@ static ASTNode *parse_function(Parser *p) {
             strncpy(sym.data_type, param->data_type, 63); sym.data_type[63] = '\0';
             sym.kind = SYM_VAR; sym.n_params = 0;
             sym.line = current(p)->line; sym.col = current(p)->col;
+<<<<<<< HEAD
             sym.offset = alloc_var(&p->cg);
+=======
+            sym.reg_index = alloc_var(&p->cg);
+>>>>>>> 39b4ebf07591601459a221af0331004d385cdc2a
             scope_add(func_scope, sym);
             advance(p);
         }
@@ -896,7 +1067,11 @@ static ASTNode *parse_function(Parser *p) {
                 strncpy(sym.data_type, param->data_type, 63); sym.data_type[63] = '\0';
                 sym.kind = SYM_VAR; sym.n_params = 0;
                 sym.line = current(p)->line; sym.col = current(p)->col;
+<<<<<<< HEAD
                 sym.offset = alloc_var(&p->cg);
+=======
+                sym.reg_index = alloc_var(&p->cg);
+>>>>>>> 39b4ebf07591601459a221af0331004d385cdc2a
                 scope_add(func_scope, sym);
                 advance(p);
             }
@@ -913,18 +1088,28 @@ static ASTNode *parse_function(Parser *p) {
         strncpy(sym.data_type, n->data_type, 63); sym.data_type[63] = '\0';
         sym.kind = SYM_FUNC; sym.n_params = n_params;
         sym.line = name_tok->line; sym.col = name_tok->col;
+<<<<<<< HEAD
         sym.offset = 0;
+=======
+        sym.reg_index = 0;
+>>>>>>> 39b4ebf07591601459a221af0331004d385cdc2a
         scope_add(p->global_scope, sym);
     }
 
     node_add_child(n, parse_block(p));
 
     p->current_scope = outer_scope;
+<<<<<<< HEAD
     p->cg.in_main    = was_in_main;
+=======
+    p->cg.in_main = was_in_main;
+    p->cg.reg_count = was_reg_count;
+>>>>>>> 39b4ebf07591601459a221af0331004d385cdc2a
     scope_free(func_scope);
     return n;
 }
 
+<<<<<<< HEAD
 /* ==================================================================== */
 /*  Init / Run / Close                                                  */
 /* ==================================================================== */
@@ -932,22 +1117,40 @@ static ASTNode *parse_function(Parser *p) {
 void parser_init(Parser *p, TokenList *tl, const char *output_file) {
     p->tl        = tl;
     p->pos       = 0;
+=======
+// Init / Run / Close
+
+void parser_init(Parser *p, TokenList *tl, const char *output_file) {
+    p->tl = tl;
+    p->pos = 0;
+>>>>>>> 39b4ebf07591601459a221af0331004d385cdc2a
     p->had_error = 0;
 
-    p->global_scope  = scope_new(NULL);
+    p->global_scope = scope_new(NULL);
     p->current_scope = p->global_scope;
 
+<<<<<<< HEAD
     /* inicializa o gerador de codigo */
     p->cg.out          = fopen(output_file, "w");
     p->cg.label_count  = 0;
     p->cg.stack_offset = 0;
     p->cg.in_main      = 0;
+=======
+    p->cg.out = fopen(output_file, "w");
+    p->cg.label_count = 0;
+    p->cg.reg_count = 0;
+    p->cg.in_main = 0;
+    p->cg.had_error = 0;
+>>>>>>> 39b4ebf07591601459a221af0331004d385cdc2a
 
     while (p->pos < tl->count && tl->tokens[p->pos].type == TOKEN_COMMENT)
         p->pos++;
 }
 
+<<<<<<< HEAD
 /* fecha o arquivo de saida do gerador */
+=======
+>>>>>>> 39b4ebf07591601459a221af0331004d385cdc2a
 void parser_close(Parser *p) {
     if (p->cg.out) fclose(p->cg.out);
 }
@@ -955,7 +1158,10 @@ void parser_close(Parser *p) {
 ASTNode *parser_run(Parser *p) {
     ASTNode *program = node_new(NODE_PROGRAM, "", 0, 0);
 
+<<<<<<< HEAD
     /* cabecalho do arquivo assembly */
+=======
+>>>>>>> 39b4ebf07591601459a221af0331004d385cdc2a
     emit(&p->cg, "section .text");
     emit(&p->cg, "");
 

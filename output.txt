@@ -1,63 +1,55 @@
 section .text
 
-global main
 main:
-    push rbp
-    mov rbp, rsp
-    sub rsp, 256
     ; float a = ...
     mov rax, 222.2
-    mov [rbp-8], rax
+    mov r8, rax
     ; int mensagem = ...
     mov rax, 5
-    mov [rbp-16], rax
+    mov r9, rax
     ; int contador = ...
     mov rax, 0
-    mov [rbp-24], rax
+    mov r10, rax
     ; if
-    mov rax, [rbp-24]
-    push rax
-    mov rax, 50
-    mov rcx, rax
-    pop rax
-    cmp rax, rcx
+    mov rax, r10
+    mov rdx, 50
+    cmp rax, rdx
     setge al
-    movzx rax, al
-    cmp rax, 0
+    test al, al
     je .L0
     ; contador = ...
-    mov rax, [rbp-24]
-    push rax
-    mov rax, 1
-    mov rcx, rax
-    pop rax
-    add rax, rcx
-    mov [rbp-24], rax
+    mov rax, r10
+    mov rdx, 1
+    add rax, rdx
+    mov r10, rax
+    jmp .L1
 .L0:
+    ; contador = ...
+    mov rax, r10
+    mov rdx, r9
+    sub rax, rdx
+    mov r10, rax
+.L1:
 .L2:
     ; while
-    mov rax, [rbp-24]
-    push rax
-    mov rax, 10
-    mov rcx, rax
-    pop rax
-    cmp rax, rcx
+    mov rax, r10
+    mov rdx, 10
+    cmp rax, rdx
     setl al
-    movzx rax, al
-    cmp rax, 0
+    test al, al
     je .L3
     ; contador = ...
-    mov rax, [rbp-24]
-    push rax
-    mov rax, 2
-    mov rcx, rax
-    pop rax
-    add rax, rcx
-    mov [rbp-24], rax
+    mov rax, r10
+    mov rdx, 2
+    add rax, rdx
+    mov r10, rax
     jmp .L2
 .L3:
     ; return
     mov rax, 0
+<<<<<<< HEAD
     mov rsp, rbp
     pop rbp
     ret
+=======
+>>>>>>> 39b4ebf07591601459a221af0331004d385cdc2a

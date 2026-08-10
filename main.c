@@ -20,12 +20,15 @@ int main(int argc, char *argv[]) {
 
     // Parser
     Parser   p;
-    parser_init(&p, &tl, "output.txt");
+    parser_init(&p, &tl, "output.txt");  
     ASTNode *ast = parser_run(&p);
-
+ 
+    // printf("\n=== AST ===\n");
+    // ast_print(ast, 0);
+ 
     ast_free(ast);
     token_list_free(&tl);
-    parser_close(&p);
+    parser_close(&p);  
     free_file(src);
 
     return 0;

@@ -1,5 +1,4 @@
 /* teste teste*/
-
 int main() {
     float a = 222.2;
     int mensagem = 5;
@@ -7,6 +6,8 @@ int main() {
 
     if (contador >= 50) {
         contador = contador + 1;
+    }else{
+        contador = contador - mensagem;
     }
     while (contador < 10) {
         contador = contador + 2;
